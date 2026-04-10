@@ -91,7 +91,29 @@ const Index = () => {
   return (
     <MobileLayout>
       {/* Header */}
-      <div className="gradient-primary px-5 pt-12 pb-8 rounded-b-3xl">
+      <div className="gradient-primary px-5 pt-12 pb-8 rounded-b-3xl relative overflow-hidden">
+        {/* Islamic Ornament - Top Right */}
+        <svg className="absolute -top-6 -right-6 w-40 h-40 text-white/[0.06]" viewBox="0 0 200 200" fill="currentColor">
+          <path d="M100 0L117.6 50.5L170.7 29.3L141.4 78.6L195.1 78.6L149.5 108.5L170.7 161.8L120 132.5L100 185.4L80 132.5L29.3 161.8L50.5 108.5L4.9 78.6L58.6 78.6L29.3 29.3L82.4 50.5Z" />
+        </svg>
+        {/* Islamic Ornament - Bottom Left */}
+        <svg className="absolute -bottom-10 -left-10 w-48 h-48 text-white/[0.04]" viewBox="0 0 200 200" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <circle cx="100" cy="100" r="90" />
+          <circle cx="100" cy="100" r="70" />
+          <circle cx="100" cy="100" r="50" />
+          <path d="M100 10L100 190M10 100L190 100" />
+          <path d="M36 36L164 164M164 36L36 164" />
+          <path d="M100 10L164 36L190 100L164 164L100 190L36 164L10 100L36 36Z" />
+        </svg>
+        {/* Islamic Ornament - Mid Right */}
+        <svg className="absolute top-1/2 -right-4 w-28 h-28 text-white/[0.05] -translate-y-1/2" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="1">
+          <polygon points="50,5 61,35 95,35 68,55 79,85 50,65 21,85 32,55 5,35 39,35" />
+          <polygon points="50,20 57,40 78,40 62,52 68,72 50,60 32,72 38,52 22,40 43,40" />
+        </svg>
+        {/* Crescent Moon Accent */}
+        <svg className="absolute top-4 right-16 w-6 h-6 text-white/[0.12]" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15c-3.31 0-6-2.69-6-6s2.69-6 6-6c.34 0 .67.03 1 .08C8.65 6.56 7 9.07 7 12s1.65 5.44 4 6.92c-.33.05-.66.08-1 .08z" />
+        </svg>
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <img src={logo} alt="KonsultasiFaraidh.id" width={40} height={40} className="rounded-lg bg-primary-foreground/10 p-1" />
