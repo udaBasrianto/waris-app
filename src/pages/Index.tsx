@@ -91,28 +91,46 @@ const Index = () => {
   return (
     <MobileLayout>
       {/* Header */}
-      <div className="gradient-primary px-5 pt-12 pb-8 rounded-b-3xl relative overflow-hidden">
-        {/* Islamic Ornament - Top Right */}
-        <svg className="absolute -top-6 -right-6 w-40 h-40 text-white/[0.06]" viewBox="0 0 200 200" fill="currentColor">
-          <path d="M100 0L117.6 50.5L170.7 29.3L141.4 78.6L195.1 78.6L149.5 108.5L170.7 161.8L120 132.5L100 185.4L80 132.5L29.3 161.8L50.5 108.5L4.9 78.6L58.6 78.6L29.3 29.3L82.4 50.5Z" />
+      <div className="gradient-primary px-5 pt-12 pb-8 rounded-b-3xl relative overflow-hidden shadow-lg border-b border-primary/20">
+        
+        {/* Subtle Interlocking Islamic Lattice Pattern */}
+        <div 
+          className="absolute inset-0 opacity-[0.04]"
+          style={{ 
+            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Cg fill='none' stroke='%23ffffff' stroke-width='1.5'%3E%3Cpath d='M0 40 l40 -40 l40 40 l-40 40 z' /%3E%3Cpath d='M20 20 h40 v40 h-40 z' /%3E%3C/g%3E%3C/svg%3E")`,
+            backgroundSize: '80px 80px'
+          }} 
+        />
+
+        {/* Ambient Glowing Orbs (Modern Glassmorphism vibe) */}
+        <div className="absolute top-0 right-0 w-56 h-56 bg-white/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-gold/15 rounded-full blur-3xl translate-y-1/3 -translate-x-1/3" />
+
+        {/* Majestic Rub el Hizb (Slowly Spinning) - Top Right */}
+        <svg className="absolute -top-16 -right-16 w-72 h-72 text-white/[0.04] animate-[spin_80s_linear_infinite]" viewBox="0 0 200 200" fill="none" stroke="currentColor" strokeWidth="1.5">
+          {/* Outer squares forming 8-point star */}
+          <rect x="40" y="40" width="120" height="120" transform="rotate(0 100 100)" />
+          <rect x="40" y="40" width="120" height="120" transform="rotate(45 100 100)" />
+          <rect x="50" y="50" width="100" height="100" transform="rotate(22.5 100 100)" strokeDasharray="4 6" />
+          {/* Inner circles */}
+          <circle cx="100" cy="100" r="35" />
+          <circle cx="100" cy="100" r="55" />
+          <circle cx="100" cy="100" r="85" strokeWidth="0.5" />
         </svg>
-        {/* Islamic Ornament - Bottom Left */}
-        <svg className="absolute -bottom-10 -left-10 w-48 h-48 text-white/[0.04]" viewBox="0 0 200 200" fill="none" stroke="currentColor" strokeWidth="1.5">
-          <circle cx="100" cy="100" r="90" />
-          <circle cx="100" cy="100" r="70" />
-          <circle cx="100" cy="100" r="50" />
-          <path d="M100 10L100 190M10 100L190 100" />
-          <path d="M36 36L164 164M164 36L36 164" />
-          <path d="M100 10L164 36L190 100L164 164L100 190L36 164L10 100L36 36Z" />
+
+        {/* Elegant Crescent & Star - Center Right */}
+        <svg className="absolute top-10 right-1/4 w-24 h-24 text-white hover:text-gold transition-colors duration-700 opacity-[0.08] -rotate-12" viewBox="0 0 100 100" fill="currentColor">
+          <path d="M55 5 a45 45 0 1 0 45 45 a55 55 0 1 1 -45 -45 z" />
+          <polygon points="68,28 72,36 81,36 74,42 77,50 68,45 59,50 62,42 55,36 64,36" opacity="0.9" />
         </svg>
-        {/* Islamic Ornament - Mid Right */}
-        <svg className="absolute top-1/2 -right-4 w-28 h-28 text-white/[0.05] -translate-y-1/2" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="1">
-          <polygon points="50,5 61,35 95,35 68,55 79,85 50,65 21,85 32,55 5,35 39,35" />
-          <polygon points="50,20 57,40 78,40 62,52 68,72 50,60 32,72 38,52 22,40 43,40" />
-        </svg>
-        {/* Crescent Moon Accent */}
-        <svg className="absolute top-4 right-16 w-6 h-6 text-white/[0.12]" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15c-3.31 0-6-2.69-6-6s2.69-6 6-6c.34 0 .67.03 1 .08C8.65 6.56 7 9.07 7 12s1.65 5.44 4 6.92c-.33.05-.66.08-1 .08z" />
+
+        {/* Corner Accent Knot - Bottom Left */}
+        <svg className="absolute -bottom-8 -left-8 w-44 h-44 text-gold/[0.06]" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="1.2">
+          <polygon points="50,5 95,50 50,95 5,50" />
+          <polygon points="50,15 85,50 50,85 15,50" />
+          <circle cx="50" cy="50" r="15" fill="currentColor" fillOpacity="0.5" />
+          <circle cx="50" cy="50" r="4" fill="currentColor" stroke="none" />
+          <path d="M 50 25 L 75 50 L 50 75 L 25 50 Z" strokeDasharray="2 4" />
         </svg>
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
