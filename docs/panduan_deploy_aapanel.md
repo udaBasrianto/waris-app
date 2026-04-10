@@ -4,7 +4,7 @@
 ```
 konsultasifaraidh.com (Nginx)
 ├── / → Frontend (file statis dari dist/)
-└── /api → Reverse Proxy ke Node.js backend (port 3001)
+└── /api → Reverse Proxy ke Node.js backend (port 3003)
 ```
 
 ---
@@ -25,8 +25,8 @@ Pastikan sudah terinstall di aaPanel:
 
 ### C. Buat Database MySQL
 1. Buka **Database → Add database**
-2. Nama database: `konsultasi_faraidh`
-3. Username: `konsultasi_faraidh` (atau sesuai keinginan)
+2. Nama database: `f4w4id_debes`
+3. Username: `f4w4id_debes`
 4. Password: *catat password-nya*
 5. Akses: **Local server**
 
@@ -60,25 +60,30 @@ nano .env
 
 Isi dengan konfigurasi production:
 ```env
-DB_HOST=localhost
-DB_USER=konsultasi_faraidh
-DB_PASSWORD=password_database_anda
-DB_NAME=konsultasi_faraidh
+DB_NAME=f4w4id_debes
 JWT_SECRET=ganti_dengan_string_random_panjang_minimal_32_karakter
-PORT=3001
+PORT=3003
 ```
 
 > **Tips**: Generate JWT_SECRET dengan: `openssl rand -hex 32`
 
 ### C. Import Skema Database
 ```bash
-mysql -u konsultasi_faraidh -p konsultasi_faraidh < schema.sql
+mysql -u f4w4id_debes -p f4w4id_debes < schema.sql
 ```
 
-### D. Jalankan Backend dengan PM2
+### D. Setup Folder Upload (PENTING)
+Agar fitur slider bisa berjalan, buat folder upload dan beri izin akses:
+```bash
+mkdir -p /www/wwwroot/konsultasifaraidh.com/backend/uploads/sliders
+chown -R www:www /www/wwwroot/konsultasifaraidh.com/backend/uploads
+chmod -R 755 /www/wwwroot/konsultasifaraidh.com/backend/uploads
+```
+
+### E. Jalankan Backend dengan PM2
 ```bash
 # Install PM2 (global)
-npm install -g pm2
+npm install -g pm2 multer
 
 # Jalankan backend
 cd /www/wwwroot/konsultasifaraidh.com/backend
@@ -91,7 +96,7 @@ pm2 startup
 
 Verifikasi backend jalan:
 ```bash
-curl http://localhost:3001/api/health
+curl http://localhost:3003/api/health
 # Harus return: {"status":"ok"}
 ```
 
@@ -118,39 +123,52 @@ Ganti isi konfigurasi `server` block menjadi:
 ```nginx
 server {
     listen 80;
+    listen 443 ssl;
+    listen 443 quic;
+    http2 on;
     server_name konsultasifaraidh.com www.konsultasifaraidh.com;
+
+    # ... (Biarkan kode SSL/Cert bawaan aaPanel tetap ada) ...
 
     # Root mengarah ke hasil build frontend
     root /www/wwwroot/konsultasifaraidh.com/dist;
     index index.html;
 
-    # Frontend - SPA (Single Page Application) routing
-    location / {
-        try_files $uri $uri/ /index.html;
+    # --- 1. KONFIGURASI UPLOAD GAMBAR (PRIORITAS) ---
+    # Menggunakan ^~ agar tidak terhambat oleh regex caching file statis
+    location ^~ /uploads/ {
+        root /www/wwwroot/konsultasifaraidh.com/backend;
+        expires 30d;
+        add_header Cache-Control "public, no-transform";
+        add_header Access-Control-Allow-Origin *;
     }
 
-    # Backend API - Reverse Proxy ke Node.js
+    # --- 2. BACKEND API (REVERSE PROXY) ---
+    # Biasanya dikelola otomatis oleh menu "Reverse Proxy" di aaPanel.
+    # Jika dikonfigurasi manual, gunakan ini:
     location /api {
-        proxy_pass http://127.0.0.1:3001;
+        proxy_pass http://127.0.0.1:3003;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
         proxy_cache_bypass $http_upgrade;
     }
 
-    # Caching untuk file statis
+    # --- 3. CACHING FILE STATIS ---
     location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
         expires 30d;
         add_header Cache-Control "public, immutable";
     }
 
-    # Log
-    access_log /www/wwwlogs/konsultasifaraidh.com.log;
-    error_log /www/wwwlogs/konsultasifaraidh.com.error.log;
+    # --- 4. SPA ROUTING (REACT) ---
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # ... (Biarkan konfigurasi Log dan SSL-END tetap ada) ...
 }
 ```
 
@@ -202,6 +220,9 @@ pm2 restart faraidh-api
 | Masalah | Solusi |
 |---|---|
 | Halaman blank/404 | Cek `root` di Nginx mengarah ke `/dist`, pastikan `try_files` ada |
+| Gambar Slider 404 | Gunakan `location ^~ /uploads/` untuk melewati prioritas regex caching. |
+| Upload Gagal/Forbidden | Jalankan `chown -R www:www backend/uploads` untuk izin akses folder. |
 | API error 502 | Backend belum jalan, cek `pm2 status` dan `pm2 logs faraidh-api` |
-| CORS error | Sudah ditangani di `server.js` (`cors({ origin: '*' })`) |
-| Database error | Cek `.env` di folder `backend/`, pastikan credential benar |
+| Database error | Cek `.env` di folder `backend/`, pastikan nama DB & Password benar |
+| Redirect Loop SSL | Hapus blok `if` http-to-https manual jika menggunakan fitur "Force HTTPS" bawaan aaPanel. |
+| Duplicate /api | Hapus konfigurasi `/api` manual jika sudah ada di tab "Reverse Proxy" aaPanel. |

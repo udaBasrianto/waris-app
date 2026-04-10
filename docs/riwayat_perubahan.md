@@ -66,3 +66,29 @@ Menghapus seluruh folder, file konfigurasi, dan dependency yang tidak lagi digun
 - 12 package NPM dihapus dari `node_modules`.
 - Proyek sepenuhnya bersih dari ketergantungan Supabase dan Lovable.
 
+---
+
+## 4. Deployment VPS & Personalisasi Beranda (Update 10 April 2026)
+Peningkatan aplikasi untuk siap digunakan publik (Production Ready) di server VPS aaPanel.
+
+### A. Infrastruktur (aaPanel & Nginx)
+- **Deployment**: Berhasil melakukan deployment ke VPS menggunakan aaPanel.
+- **Reverse Proxy**: Konfigurasi Nginx untuk meneruskan `/api` ke Node.js di port 3003.
+- **SPA Routing**: Penyesuaian `try_files` untuk mendukung React Router di server Nginx.
+- **Static Assets**: Penanganan error 404 pada gambar upload dengan konfigurasi `location ^~ /uploads/` untuk melewati caching regex.
+
+### B. Fitur Baru Beranda (Dynamic Content)
+- **GPS Location**: Deteksi otomatis kota/lokasi user menggunakan Browser Geolocation API & Nominatim API.
+- **Real-time Clock**: Penambahan jam digital di header dengan format waktu Indonesia (WIB/WITA/WIT).
+- **Hero Slider**: Implementasi carousel banner dinamis dengan fitur auto-slide (5 detik).
+- **Islamic Ornaments**: Penaksiran estetika dengan ornamen geometris islami (Rub el Hizb, Bulan Sabit, Lattice Pattern) serta efek Glassmorphism yang modern.
+
+### C. Admin & Pengelolaan Konten
+- **Slider CRUD**: Tab baru di Admin Dashboard untuk mengelola gambar banner beranda.
+- **Image Upload**: Integrasi library `multer` di backend untuk mendukung unggah file gambar (`.jpg`, `.png`, `.webp`) secara langsung ke server.
+- **Back Navigation**: Penambahan tombol kembali (ArrowLeft) di seluruh halaman utama (Profil, Konsultasi, Riwayat) untuk memudahkan user kembali ke beranda.
+
+### D. Keamanan & Database
+- **Tabel Baru**: Penambahan tabel `sliders` di database MySQL.
+- **Role Fix**: Perbaikan pengecekan middleware `adminOnly` untuk akses fitur-fitur administratif.
+
