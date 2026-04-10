@@ -1,4 +1,4 @@
-import { ChevronRight, LogOut, Settings, Shield, HelpCircle, FileText, Users, UserCheck, LayoutDashboard, BookOpen } from "lucide-react";
+import { ArrowLeft, ChevronRight, LogOut, Settings, Shield, HelpCircle, FileText, Users, UserCheck, LayoutDashboard, BookOpen } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import MobileLayout from "@/components/MobileLayout";
 import { useAuth } from "@/contexts/AuthContext";
@@ -30,8 +30,14 @@ const Profil = () => {
 
   return (
     <MobileLayout>
-      <div className="px-5 pt-12 pb-6">
-        <h1 className="font-heading text-xl font-bold text-foreground">Profil</h1>
+      <div className="px-5 pt-12 pb-6 flex items-center gap-3">
+        <button 
+          onClick={() => navigate("/")}
+          className="w-8 h-8 flex items-center justify-center rounded-full bg-secondary/80 hover:bg-secondary text-secondary-foreground transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+        </button>
+        <h1 className="font-heading text-xl font-bold text-foreground flex-1">Profil</h1>
       </div>
 
       {/* Profile Card */}

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Clock, CheckCircle, AlertCircle, MessageSquare } from "lucide-react";
+import { Clock, CheckCircle, AlertCircle, MessageSquare, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import MobileLayout from "@/components/MobileLayout";
 import { useAuth } from "@/contexts/AuthContext";
@@ -42,9 +42,17 @@ const Riwayat = () => {
 
   return (
     <MobileLayout>
-      <div className="px-5 pt-12 pb-4">
-        <h1 className="font-heading text-xl font-bold text-foreground">Riwayat Konsultasi</h1>
-        <p className="text-sm text-muted-foreground mt-1">Daftar konsultasi Anda</p>
+      <div className="px-5 pt-12 pb-4 flex items-center gap-3">
+        <button 
+          onClick={() => navigate("/")}
+          className="w-8 h-8 flex items-center justify-center rounded-full bg-secondary/80 hover:bg-secondary text-secondary-foreground transition-colors shrink-0"
+        >
+          <ArrowLeft className="w-4 h-4" />
+        </button>
+        <div>
+          <h1 className="font-heading text-xl font-bold text-foreground">Riwayat Konsultasi</h1>
+          <p className="text-sm text-muted-foreground mt-1">Daftar konsultasi Anda</p>
+        </div>
       </div>
 
       <div className="px-5 flex flex-col gap-3 pb-24">

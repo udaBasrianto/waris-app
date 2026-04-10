@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, MessageSquare, Clock, ChevronRight } from "lucide-react";
+import { Plus, MessageSquare, Clock, ChevronRight, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import MobileLayout from "@/components/MobileLayout";
 import { Button } from "@/components/ui/button";
@@ -74,12 +74,20 @@ const Konsultasi = () => {
 
   return (
     <MobileLayout>
-      <div className="px-5 pt-12 pb-4 flex items-center justify-between">
-        <div>
-          <h1 className="font-heading text-xl font-bold text-foreground">Konsultasi</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {role === "ustad" ? "Konsultasi yang ditugaskan" : "Konsultasi Anda"}
-          </p>
+      <div className="px-5 pt-12 pb-4 flex items-center gap-3 justify-between">
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => navigate("/")}
+            className="w-8 h-8 flex items-center justify-center rounded-full bg-secondary/80 hover:bg-secondary text-secondary-foreground transition-colors shrink-0"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </button>
+          <div>
+            <h1 className="font-heading text-xl font-bold text-foreground">Konsultasi</h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              {role === "ustad" ? "Konsultasi yang ditugaskan" : "Konsultasi Anda"}
+            </p>
+          </div>
         </div>
         {role !== "ustad" && (
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
