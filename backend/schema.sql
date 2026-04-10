@@ -1,0 +1,114 @@
+-- KonsultasiFaraidh MySQL Schema
+DROP DATABASE IF EXISTS konsultasi_faraidh;
+CREATE DATABASE konsultasi_faraidh CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+USE konsultasi_faraidh;
+
+-- Users (replaces Supabase auth.users)
+CREATE TABLE users (
+  id VARCHAR(36) NOT NULL PRIMARY KEY,
+  email VARCHAR(255) NOT NULL UNIQUE,
+  password_hash VARCHAR(255) NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Profiles
+CREATE TABLE profiles (
+  id VARCHAR(36) NOT NULL PRIMARY KEY,
+  user_id VARCHAR(36) NOT NULL UNIQUE,
+  full_name VARCHAR(255) DEFAULT NULL,
+  phone VARCHAR(50) DEFAULT NULL,
+  avatar_url TEXT DEFAULT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- User Roles
+CREATE TABLE user_roles (
+  id VARCHAR(36) NOT NULL PRIMARY KEY,
+  user_id VARCHAR(36) NOT NULL,
+  role ENUM('admin', 'ustad', 'klien') NOT NULL DEFAULT 'klien',
+  UNIQUE KEY unique_user_role (user_id, role),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Ustad Profiles
+CREATE TABLE ustad_profiles (
+  id VARCHAR(36) NOT NULL PRIMARY KEY,
+  user_id VARCHAR(36) NOT NULL UNIQUE,
+  bio TEXT DEFAULT NULL,
+  specialization VARCHAR(255) DEFAULT NULL,
+  available BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Ustad Availability
+CREATE TABLE ustad_availability (
+  id VARCHAR(36) NOT NULL PRIMARY KEY,
+  ustad_id VARCHAR(36) NOT NULL,
+  day_of_week TINYINT NOT NULL,
+  start_time TIME NOT NULL,
+  end_time TIME NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (ustad_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Consultations
+CREATE TABLE consultations (
+  id VARCHAR(36) NOT NULL PRIMARY KEY,
+  client_id VARCHAR(36) NOT NULL,
+  ustad_id VARCHAR(36) DEFAULT NULL,
+  topic VARCHAR(500) NOT NULL,
+  status ENUM('pending', 'active', 'completed') NOT NULL DEFAULT 'pending',
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (client_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (ustad_id) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Messages
+CREATE TABLE messages (
+  id VARCHAR(36) NOT NULL PRIMARY KEY,
+  consultation_id VARCHAR(36) NOT NULL,
+  sender_id VARCHAR(36) NOT NULL,
+  content TEXT NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (consultation_id) REFERENCES consultations(id) ON DELETE CASCADE,
+  FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Ratings
+CREATE TABLE ratings (
+  id VARCHAR(36) NOT NULL PRIMARY KEY,
+  consultation_id VARCHAR(36) NOT NULL,
+  client_id VARCHAR(36) NOT NULL,
+  ustad_id VARCHAR(36) NOT NULL,
+  score TINYINT NOT NULL,
+  comment TEXT DEFAULT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (consultation_id) REFERENCES consultations(id) ON DELETE CASCADE,
+  FOREIGN KEY (client_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (ustad_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Consultation Bookings
+CREATE TABLE consultation_bookings (
+  id VARCHAR(36) NOT NULL PRIMARY KEY,
+  ustad_id VARCHAR(36) NOT NULL,
+  client_id VARCHAR(36) DEFAULT NULL,
+  consultation_id VARCHAR(36) DEFAULT NULL,
+  booking_date DATE NOT NULL,
+  start_time TIME NOT NULL,
+  end_time TIME NOT NULL,
+  notes TEXT DEFAULT NULL,
+  status ENUM('scheduled', 'cancelled', 'completed') NOT NULL DEFAULT 'scheduled',
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (ustad_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (client_id) REFERENCES users(id) ON DELETE SET NULL,
+  FOREIGN KEY (consultation_id) REFERENCES consultations(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

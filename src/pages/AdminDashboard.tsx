@@ -1,0 +1,396 @@
+import { useState, useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { api } from "@/lib/api";
+import { Navigate, useNavigate } from "react-router-dom";
+import { Users, UserCheck, MessageSquare, TrendingUp, Shield, ArrowLeft, Plus, Pencil, Trash2, CalendarDays } from "lucide-react";
+import UstadScheduleManager from "@/components/UstadScheduleManager";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
+
+type AppRole = "admin" | "ustad" | "klien";
+
+interface UserWithRole {
+  user_id: string;
+  full_name: string | null;
+  phone: string | null;
+  role: AppRole;
+  created_at: string;
+}
+
+interface UstadProfileData {
+  user_id: string;
+  bio: string;
+  specialization: string;
+  available: boolean;
+  full_name: string;
+}
+
+const AdminDashboard = () => {
+  const { role, loading } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [users, setUsers] = useState<UserWithRole[]>([]);
+  const [ustadProfiles, setUstadProfiles] = useState<UstadProfileData[]>([]);
+  const [loadingData, setLoadingData] = useState(true);
+  const [editDialog, setEditDialog] = useState(false);
+  const [editingUstad, setEditingUstad] = useState<UstadProfileData | null>(null);
+  const [formBio, setFormBio] = useState("");
+  const [formSpec, setFormSpec] = useState("");
+  const [formAvailable, setFormAvailable] = useState(false);
+  const [formName, setFormName] = useState("");
+  const [formUserId, setFormUserId] = useState("");
+  const [isNew, setIsNew] = useState(false);
+
+  useEffect(() => {
+    if (role === "admin") {
+      fetchUsers();
+      fetchUstadProfiles();
+    }
+  }, [role]);
+
+  const fetchUsers = async () => {
+    setLoadingData(true);
+    try {
+      const data = await api.get<UserWithRole[]>("/admin/users");
+      setUsers(data);
+    } catch (err) {
+      console.error(err);
+    }
+    setLoadingData(false);
+  };
+
+  const fetchUstadProfiles = async () => {
+    try {
+      const data = await api.get<UstadProfileData[]>("/admin/ustads");
+      setUstadProfiles(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const updateRole = async (userId: string, newRole: AppRole) => {
+    try {
+      await api.put(`/admin/users/${userId}/role`, { role: newRole });
+      fetchUsers();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const openEditDialog = (ustad: UstadProfileData) => {
+    setIsNew(false);
+    setEditingUstad(ustad);
+    setFormBio(ustad.bio);
+    setFormSpec(ustad.specialization);
+    setFormAvailable(ustad.available);
+    setFormName(ustad.full_name);
+    setFormUserId(ustad.user_id);
+    setEditDialog(true);
+  };
+
+  const openNewDialog = () => {
+    setIsNew(true);
+    setEditingUstad(null);
+    setFormBio("");
+    setFormSpec("");
+    setFormAvailable(false);
+    setFormName("");
+    setFormUserId("");
+    setEditDialog(true);
+  };
+
+  const saveUstadProfile = async () => {
+    try {
+      if (isNew) {
+        if (!formUserId) {
+          toast({ title: "Pilih user ID ustad", variant: "destructive" });
+          return;
+        }
+        await api.post("/admin/ustads", {
+          user_id: formUserId,
+          bio: formBio,
+          specialization: formSpec,
+          available: formAvailable,
+        });
+      } else {
+        await api.put(`/admin/ustads/${formUserId}`, {
+          bio: formBio,
+          specialization: formSpec,
+          available: formAvailable,
+        });
+      }
+      setEditDialog(false);
+      fetchUstadProfiles();
+      fetchUsers();
+      toast({ title: isNew ? "Profil ustad ditambahkan" : "Profil ustad diperbarui" });
+    } catch (error: any) {
+      toast({ title: "Gagal", description: error.message, variant: "destructive" });
+    }
+  };
+
+  const deleteUstadProfile = async (userId: string) => {
+    try {
+      await api.delete(`/admin/ustads/${userId}`);
+      fetchUstadProfiles();
+      toast({ title: "Profil ustad dihapus" });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (role !== "admin") return <Navigate to="/" replace />;
+
+  const ustads = users.filter((u) => u.role === "ustad");
+  const kliens = users.filter((u) => u.role === "klien");
+  const totalUsers = users.length;
+
+  const stats = [
+    { label: "Total Pengguna", value: totalUsers, icon: Users, color: "text-primary" },
+    { label: "Ustad/Coach", value: ustads.length, icon: UserCheck, color: "text-gold" },
+    { label: "Klien", value: kliens.length, icon: MessageSquare, color: "text-blue-500" },
+    { label: "Konsultasi", value: 0, icon: TrendingUp, color: "text-green-500" },
+  ];
+
+  const roleBadgeVariant = (r: AppRole) => {
+    switch (r) {
+      case "admin": return "destructive" as const;
+      case "ustad": return "default" as const;
+      case "klien": return "secondary" as const;
+    }
+  };
+
+  const formatDate = (d: string) =>
+    new Date(d).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
+
+  const UserTable = ({ data, showRoleActions = false }: { data: UserWithRole[]; showRoleActions?: boolean }) => (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Nama</TableHead>
+          <TableHead>Telepon</TableHead>
+          <TableHead>Role</TableHead>
+          <TableHead>Terdaftar</TableHead>
+          {showRoleActions && <TableHead>Aksi</TableHead>}
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {data.length === 0 ? (
+          <TableRow>
+            <TableCell colSpan={showRoleActions ? 5 : 4} className="text-center text-muted-foreground py-8">Belum ada data</TableCell>
+          </TableRow>
+        ) : (
+          data.map((u) => (
+            <TableRow key={u.user_id}>
+              <TableCell className="font-medium">{u.full_name || "—"}</TableCell>
+              <TableCell>{u.phone || "—"}</TableCell>
+              <TableCell><Badge variant={roleBadgeVariant(u.role)}>{u.role}</Badge></TableCell>
+              <TableCell className="text-muted-foreground text-xs">{formatDate(u.created_at)}</TableCell>
+              {showRoleActions && (
+                <TableCell>
+                  <div className="flex gap-1">
+                    {u.role !== "ustad" && (
+                      <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => updateRole(u.user_id, "ustad")}>→ Ustad</Button>
+                    )}
+                    {u.role !== "klien" && u.role !== "admin" && (
+                      <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => updateRole(u.user_id, "klien")}>→ Klien</Button>
+                    )}
+                  </div>
+                </TableCell>
+              )}
+            </TableRow>
+          ))
+        )}
+      </TableBody>
+    </Table>
+  );
+
+  return (
+    <div className="min-h-screen bg-background">
+      <div className="gradient-primary px-5 pt-10 pb-6">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center gap-3 mb-4">
+            <Button variant="ghost" size="icon" className="text-primary-foreground" onClick={() => navigate("/")}>
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <Shield className="w-6 h-6 text-primary-foreground" />
+            <h1 className="font-heading text-xl font-bold text-primary-foreground">Dashboard Admin</h1>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-4xl mx-auto px-4 -mt-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+          {stats.map((s) => (
+            <Card key={s.label} className="glass-card">
+              <CardContent className="p-4 flex items-center gap-3">
+                <s.icon className={`w-8 h-8 ${s.color}`} />
+                <div>
+                  <p className="text-2xl font-bold text-foreground">{s.value}</p>
+                  <p className="text-xs text-muted-foreground">{s.label}</p>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        <Tabs defaultValue="ustad-profiles" className="mb-8">
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="ustad-profiles">Profil Ustad</TabsTrigger>
+            <TabsTrigger value="jadwal" className="gap-1"><CalendarDays className="w-3.5 h-3.5" /> Jadwal</TabsTrigger>
+            <TabsTrigger value="ustads">Ustad ({ustads.length})</TabsTrigger>
+            <TabsTrigger value="kliens">Klien ({kliens.length})</TabsTrigger>
+            <TabsTrigger value="semua">Semua ({totalUsers})</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="ustad-profiles">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="text-base">Kelola Profil Ustad</CardTitle>
+                <Button size="sm" className="gap-1" onClick={openNewDialog}>
+                  <Plus className="w-4 h-4" /> Tambah
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nama</TableHead>
+                      <TableHead>Spesialisasi</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Aksi</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {ustadProfiles.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={4} className="text-center text-muted-foreground py-8">Belum ada profil ustad</TableCell>
+                      </TableRow>
+                    ) : (
+                      ustadProfiles.map(up => (
+                        <TableRow key={up.user_id}>
+                          <TableCell className="font-medium">{up.full_name}</TableCell>
+                          <TableCell className="text-sm">{up.specialization || "—"}</TableCell>
+                          <TableCell>
+                            <Badge variant={up.available ? "default" : "secondary"}>
+                              {up.available ? "Online" : "Offline"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex gap-1">
+                              <Button size="sm" variant="outline" className="h-7" onClick={() => openEditDialog(up)}>
+                                <Pencil className="w-3 h-3" />
+                              </Button>
+                              <Button size="sm" variant="outline" className="h-7 text-destructive" onClick={() => deleteUstadProfile(up.user_id)}>
+                                <Trash2 className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="jadwal">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Kelola Jadwal Ustad</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <UstadScheduleManager isAdmin />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="ustads">
+            <Card>
+              <CardHeader><CardTitle className="text-base">Daftar Ustad/Coach</CardTitle></CardHeader>
+              <CardContent><UserTable data={ustads} /></CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="kliens">
+            <Card>
+              <CardHeader><CardTitle className="text-base">Daftar Klien</CardTitle></CardHeader>
+              <CardContent><UserTable data={kliens} /></CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="semua">
+            <Card>
+              <CardHeader><CardTitle className="text-base">Semua Pengguna</CardTitle></CardHeader>
+              <CardContent><UserTable data={users} showRoleActions /></CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
+
+      {/* Edit/Add Ustad Dialog */}
+      <Dialog open={editDialog} onOpenChange={setEditDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{isNew ? "Tambah Profil Ustad" : "Edit Profil Ustad"}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-2">
+            {isNew && (
+              <div className="space-y-2">
+                <Label>Pilih User</Label>
+                <select
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={formUserId}
+                  onChange={e => {
+                    setFormUserId(e.target.value);
+                    const u = users.find(u => u.user_id === e.target.value);
+                    setFormName(u?.full_name || "");
+                  }}
+                >
+                  <option value="">-- Pilih user --</option>
+                  {users.filter(u => !ustadProfiles.some(up => up.user_id === u.user_id)).map(u => (
+                    <option key={u.user_id} value={u.user_id}>{u.full_name || u.user_id}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+            <div className="space-y-2">
+              <Label>Spesialisasi</Label>
+              <Input value={formSpec} onChange={e => setFormSpec(e.target.value)} placeholder="Ahli Faraidh & Fiqh Mawaris" />
+            </div>
+            <div className="space-y-2">
+              <Label>Bio</Label>
+              <Textarea value={formBio} onChange={e => setFormBio(e.target.value)} placeholder="Deskripsi singkat tentang ustad..." rows={4} />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label>Tersedia (Online)</Label>
+              <Switch checked={formAvailable} onCheckedChange={setFormAvailable} />
+            </div>
+            <Button onClick={saveUstadProfile} className="w-full">
+              {isNew ? "Tambahkan" : "Simpan Perubahan"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+export default AdminDashboard;
