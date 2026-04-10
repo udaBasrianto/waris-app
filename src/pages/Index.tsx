@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Scale, BookOpen, Calculator, Users, Bell, ShieldCheck } from "lucide-react";
+import { Scale, BookOpen, Calculator, Users, Bell, ShieldCheck, MapPin, Clock } from "lucide-react";
 import MobileLayout from "@/components/MobileLayout";
 import ServiceCard from "@/components/ServiceCard";
 import UstadCard from "@/components/UstadCard";
@@ -26,9 +26,12 @@ interface UstadData {
 
 const Index = () => {
   const navigate = useNavigate();
-  const { role } = useAuth();
+  const { user, role } = useAuth();
   const [ustads, setUstads] = useState<UstadData[]>([]);
+  const [location, setLocation] = useState<string>("Mendeteksi lokasi...");
+  const [currentTime, setCurrentTime] = useState<Date>(new Date());
 
+  // Fetch ustads
   useEffect(() => {
     const fetchUstads = async () => {
       try {
@@ -40,6 +43,49 @@ const Index = () => {
     };
     fetchUstads();
   }, []);
+
+  // Real-time clock
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // GPS Location
+  useEffect(() => {
+    if (!navigator.geolocation) {
+      setLocation("Lokasi tidak tersedia");
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&accept-language=id`
+          );
+          const data = await res.json();
+          const addr = data.address;
+          const city = addr.city || addr.town || addr.municipality || addr.county || addr.state || "";
+          const state = addr.state || "";
+          setLocation(city === state ? city : `${city}, ${state}`);
+        } catch {
+          setLocation("Lokasi tidak diketahui");
+        }
+      },
+      () => setLocation("Izin lokasi ditolak"),
+      { enableHighAccuracy: false, timeout: 10000 }
+    );
+  }, []);
+
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  };
+
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  };
+
+  const displayName = user?.full_name || user?.email?.split("@")[0] || "";
 
   return (
     <MobileLayout>
@@ -70,8 +116,19 @@ const Index = () => {
           </div>
         </div>
         <div className="bg-primary-foreground/10 rounded-xl p-4 backdrop-blur-sm">
-          <p className="text-primary-foreground/80 text-xs mb-1">Assalamu'alaikum 👋</p>
-          <p className="text-primary-foreground font-semibold text-sm">Dapatkan panduan pembagian warisan sesuai syariat Islam</p>
+          <p className="text-primary-foreground font-semibold text-sm mb-2">
+            Assalamu'alaykum {displayName ? displayName : ""} 👋
+          </p>
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-1.5">
+              <MapPin className="w-3 h-3 text-primary-foreground/70 flex-shrink-0" />
+              <span className="text-primary-foreground/70 text-xs truncate">{location}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Clock className="w-3 h-3 text-primary-foreground/70 flex-shrink-0" />
+              <span className="text-primary-foreground/70 text-xs">{formatDate(currentTime)} • {formatTime(currentTime)}</span>
+            </div>
+          </div>
         </div>
       </div>
 
