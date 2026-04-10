@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
 import { Navigate, useNavigate } from "react-router-dom";
-import { Users, UserCheck, MessageSquare, TrendingUp, Shield, ArrowLeft, Plus, Pencil, Trash2, CalendarDays } from "lucide-react";
+import { Users, UserCheck, MessageSquare, TrendingUp, Shield, ArrowLeft, Plus, Pencil, Trash2, CalendarDays, Image } from "lucide-react";
 import UstadScheduleManager from "@/components/UstadScheduleManager";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -34,6 +34,16 @@ interface UstadProfileData {
   full_name: string;
 }
 
+interface SliderData {
+  id: string;
+  title: string;
+  description: string;
+  image_url: string;
+  link_url: string;
+  active: boolean;
+  sort_order: number;
+}
+
 const AdminDashboard = () => {
   const { role, loading } = useAuth();
   const navigate = useNavigate();
@@ -50,10 +60,23 @@ const AdminDashboard = () => {
   const [formUserId, setFormUserId] = useState("");
   const [isNew, setIsNew] = useState(false);
 
+  // Slider states
+  const [sliders, setSliders] = useState<SliderData[]>([]);
+  const [sliderDialog, setSliderDialog] = useState(false);
+  const [editingSlider, setEditingSlider] = useState<SliderData | null>(null);
+  const [isNewSlider, setIsNewSlider] = useState(false);
+  const [sliderTitle, setSliderTitle] = useState("");
+  const [sliderDesc, setSliderDesc] = useState("");
+  const [sliderImageUrl, setSliderImageUrl] = useState("");
+  const [sliderLinkUrl, setSliderLinkUrl] = useState("");
+  const [sliderActive, setSliderActive] = useState(true);
+  const [sliderOrder, setSliderOrder] = useState(0);
+
   useEffect(() => {
     if (role === "admin") {
       fetchUsers();
       fetchUstadProfiles();
+      fetchSliders();
     }
   }, [role]);
 
@@ -142,6 +165,73 @@ const AdminDashboard = () => {
       await api.delete(`/admin/ustads/${userId}`);
       fetchUstadProfiles();
       toast({ title: "Profil ustad dihapus" });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // ============ SLIDER FUNCTIONS ============
+  const fetchSliders = async () => {
+    try {
+      const data = await api.get<SliderData[]>("/admin/sliders");
+      setSliders(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const openNewSliderDialog = () => {
+    setIsNewSlider(true);
+    setEditingSlider(null);
+    setSliderTitle("");
+    setSliderDesc("");
+    setSliderImageUrl("");
+    setSliderLinkUrl("");
+    setSliderActive(true);
+    setSliderOrder(0);
+    setSliderDialog(true);
+  };
+
+  const openEditSliderDialog = (s: SliderData) => {
+    setIsNewSlider(false);
+    setEditingSlider(s);
+    setSliderTitle(s.title);
+    setSliderDesc(s.description);
+    setSliderImageUrl(s.image_url);
+    setSliderLinkUrl(s.link_url);
+    setSliderActive(s.active);
+    setSliderOrder(s.sort_order);
+    setSliderDialog(true);
+  };
+
+  const saveSlider = async () => {
+    try {
+      const body = {
+        title: sliderTitle,
+        description: sliderDesc,
+        image_url: sliderImageUrl,
+        link_url: sliderLinkUrl,
+        active: sliderActive,
+        sort_order: sliderOrder,
+      };
+      if (isNewSlider) {
+        await api.post("/admin/sliders", body);
+      } else if (editingSlider) {
+        await api.put(`/admin/sliders/${editingSlider.id}`, body);
+      }
+      setSliderDialog(false);
+      fetchSliders();
+      toast({ title: isNewSlider ? "Slider ditambahkan" : "Slider diperbarui" });
+    } catch (error: any) {
+      toast({ title: "Gagal", description: error.message, variant: "destructive" });
+    }
+  };
+
+  const deleteSlider = async (id: string) => {
+    try {
+      await api.delete(`/admin/sliders/${id}`);
+      fetchSliders();
+      toast({ title: "Slider dihapus" });
     } catch (err) {
       console.error(err);
     }
@@ -251,13 +341,76 @@ const AdminDashboard = () => {
         </div>
 
         <Tabs defaultValue="ustad-profiles" className="mb-8">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
+            <TabsTrigger value="sliders" className="gap-1"><Image className="w-3.5 h-3.5" /> Slider</TabsTrigger>
             <TabsTrigger value="ustad-profiles">Profil Ustad</TabsTrigger>
             <TabsTrigger value="jadwal" className="gap-1"><CalendarDays className="w-3.5 h-3.5" /> Jadwal</TabsTrigger>
             <TabsTrigger value="ustads">Ustad ({ustads.length})</TabsTrigger>
             <TabsTrigger value="kliens">Klien ({kliens.length})</TabsTrigger>
             <TabsTrigger value="semua">Semua ({totalUsers})</TabsTrigger>
           </TabsList>
+
+          {/* SLIDER TAB */}
+          <TabsContent value="sliders">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="text-base">Kelola Slider Beranda</CardTitle>
+                <Button size="sm" className="gap-1" onClick={openNewSliderDialog}>
+                  <Plus className="w-4 h-4" /> Tambah
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Gambar</TableHead>
+                      <TableHead>Judul</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Urutan</TableHead>
+                      <TableHead>Aksi</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {sliders.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center text-muted-foreground py-8">Belum ada slider</TableCell>
+                      </TableRow>
+                    ) : (
+                      sliders.map(s => (
+                        <TableRow key={s.id}>
+                          <TableCell>
+                            <img src={s.image_url} alt={s.title} className="w-20 h-12 object-cover rounded-md" />
+                          </TableCell>
+                          <TableCell className="font-medium">
+                            <div>
+                              <p className="text-sm">{s.title}</p>
+                              <p className="text-xs text-muted-foreground truncate max-w-[200px]">{s.description}</p>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={s.active ? "default" : "secondary"}>
+                              {s.active ? "Aktif" : "Nonaktif"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-sm">{s.sort_order}</TableCell>
+                          <TableCell>
+                            <div className="flex gap-1">
+                              <Button size="sm" variant="outline" className="h-7" onClick={() => openEditSliderDialog(s)}>
+                                <Pencil className="w-3 h-3" />
+                              </Button>
+                              <Button size="sm" variant="outline" className="h-7 text-destructive" onClick={() => deleteSlider(s.id)}>
+                                <Trash2 className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           <TabsContent value="ustad-profiles">
             <Card>
@@ -385,6 +538,47 @@ const AdminDashboard = () => {
             </div>
             <Button onClick={saveUstadProfile} className="w-full">
               {isNew ? "Tambahkan" : "Simpan Perubahan"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Slider Dialog */}
+      <Dialog open={sliderDialog} onOpenChange={setSliderDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{isNewSlider ? "Tambah Slider" : "Edit Slider"}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-2">
+            <div className="space-y-2">
+              <Label>Judul *</Label>
+              <Input value={sliderTitle} onChange={e => setSliderTitle(e.target.value)} placeholder="Judul slider" />
+            </div>
+            <div className="space-y-2">
+              <Label>Deskripsi</Label>
+              <Textarea value={sliderDesc} onChange={e => setSliderDesc(e.target.value)} placeholder="Deskripsi singkat (opsional)" rows={2} />
+            </div>
+            <div className="space-y-2">
+              <Label>URL Gambar *</Label>
+              <Input value={sliderImageUrl} onChange={e => setSliderImageUrl(e.target.value)} placeholder="https://contoh.com/gambar.jpg" />
+              {sliderImageUrl && (
+                <img src={sliderImageUrl} alt="Preview" className="w-full h-32 object-cover rounded-lg border" />
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label>URL Link (opsional)</Label>
+              <Input value={sliderLinkUrl} onChange={e => setSliderLinkUrl(e.target.value)} placeholder="/konsultasi atau https://..." />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label>Urutan</Label>
+              <Input type="number" value={sliderOrder} onChange={e => setSliderOrder(Number(e.target.value))} className="w-20 text-center" />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label>Aktif</Label>
+              <Switch checked={sliderActive} onCheckedChange={setSliderActive} />
+            </div>
+            <Button onClick={saveSlider} className="w-full" disabled={!sliderTitle || !sliderImageUrl}>
+              {isNewSlider ? "Tambahkan" : "Simpan Perubahan"}
             </Button>
           </div>
         </DialogContent>

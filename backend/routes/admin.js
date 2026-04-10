@@ -108,4 +108,62 @@ router.delete('/ustads/:id', async (req, res) => {
   }
 });
 
+// ============ SLIDERS ============
+
+// GET /api/admin/sliders — list all sliders
+router.get('/sliders', async (req, res) => {
+  try {
+    const [sliders] = await db.query('SELECT * FROM sliders ORDER BY sort_order ASC, created_at DESC');
+    res.json(sliders);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Gagal mengambil data slider' });
+  }
+});
+
+// POST /api/admin/sliders — create slider
+router.post('/sliders', async (req, res) => {
+  try {
+    const { title, description, image_url, link_url, active, sort_order } = req.body;
+    if (!title || !image_url) return res.status(400).json({ error: 'Judul dan URL gambar wajib diisi' });
+
+    const id = uuidv4();
+    await db.query(
+      'INSERT INTO sliders (id, title, description, image_url, link_url, active, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [id, title, description || '', image_url, link_url || '', active !== false, sort_order || 0]
+    );
+    res.status(201).json({ message: 'Slider ditambahkan', id });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Gagal menambah slider' });
+  }
+});
+
+// PUT /api/admin/sliders/:id — update slider
+router.put('/sliders/:id', async (req, res) => {
+  try {
+    const { title, description, image_url, link_url, active, sort_order } = req.body;
+    await db.query(
+      'UPDATE sliders SET title = ?, description = ?, image_url = ?, link_url = ?, active = ?, sort_order = ? WHERE id = ?',
+      [title, description || '', image_url, link_url || '', active !== false, sort_order || 0, req.params.id]
+    );
+    res.json({ message: 'Slider diperbarui' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Gagal memperbarui slider' });
+  }
+});
+
+// DELETE /api/admin/sliders/:id — delete slider
+router.delete('/sliders/:id', async (req, res) => {
+  try {
+    await db.query('DELETE FROM sliders WHERE id = ?', [req.params.id]);
+    res.json({ message: 'Slider dihapus' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Gagal menghapus slider' });
+  }
+});
+
 export default router;
+

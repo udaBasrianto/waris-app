@@ -4,6 +4,7 @@ import { Scale, BookOpen, Calculator, Users, Bell, ShieldCheck, MapPin, Clock } 
 import MobileLayout from "@/components/MobileLayout";
 import ServiceCard from "@/components/ServiceCard";
 import UstadCard from "@/components/UstadCard";
+import HeroSlider from "@/components/HeroSlider";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
 import logo from "@/assets/logo.png";
@@ -131,6 +132,9 @@ const Index = () => {
           </div>
         </div>
       </div>
+
+      {/* Slider */}
+      <HeroSlider />
 
       {/* Services */}
       <div className="px-5 mt-6">
