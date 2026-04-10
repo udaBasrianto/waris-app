@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import path from 'path';
 import authRoutes from './routes/auth.js';
 import profileRoutes from './routes/profile.js';
 import consultationRoutes from './routes/consultation.js';
@@ -12,6 +13,9 @@ const PORT = process.env.PORT || 3001;
 
 app.use(cors({ origin: '*' }));
 app.use(express.json());
+
+// Serve uploaded files
+app.use('/uploads', express.static(path.resolve('uploads')));
 
 // Routes
 app.use('/api/auth', authRoutes);

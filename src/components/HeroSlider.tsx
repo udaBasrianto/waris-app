@@ -2,6 +2,14 @@ import { useState, useEffect, useCallback } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { api } from "@/lib/api";
 
+const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:3001/api').replace('/api', '');
+
+const resolveImageUrl = (url: string) => {
+  if (!url) return '';
+  if (url.startsWith('http')) return url;
+  return `${API_BASE}${url}`;
+};
+
 interface SliderData {
   id: string;
   title: string;
@@ -52,7 +60,7 @@ const HeroSlider = () => {
       <div className="relative rounded-2xl overflow-hidden shadow-lg aspect-[16/7]">
         {/* Slide Image */}
         <img
-          src={slide.image_url}
+          src={resolveImageUrl(slide.image_url)}
           alt={slide.title}
           className="w-full h-full object-cover transition-all duration-500"
         />

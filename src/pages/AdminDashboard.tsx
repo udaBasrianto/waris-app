@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
 import { Navigate, useNavigate } from "react-router-dom";
-import { Users, UserCheck, MessageSquare, TrendingUp, Shield, ArrowLeft, Plus, Pencil, Trash2, CalendarDays, Image } from "lucide-react";
+import { Users, UserCheck, MessageSquare, TrendingUp, Shield, ArrowLeft, Plus, Pencil, Trash2, CalendarDays, Image, Upload, Loader2 } from "lucide-react";
 import UstadScheduleManager from "@/components/UstadScheduleManager";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -71,6 +71,7 @@ const AdminDashboard = () => {
   const [sliderLinkUrl, setSliderLinkUrl] = useState("");
   const [sliderActive, setSliderActive] = useState(true);
   const [sliderOrder, setSliderOrder] = useState(0);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     if (role === "admin") {
@@ -559,10 +560,52 @@ const AdminDashboard = () => {
               <Textarea value={sliderDesc} onChange={e => setSliderDesc(e.target.value)} placeholder="Deskripsi singkat (opsional)" rows={2} />
             </div>
             <div className="space-y-2">
-              <Label>URL Gambar *</Label>
-              <Input value={sliderImageUrl} onChange={e => setSliderImageUrl(e.target.value)} placeholder="https://contoh.com/gambar.jpg" />
+              <Label>Gambar Slider *</Label>
+              <div className="flex gap-2">
+                <Input value={sliderImageUrl} onChange={e => setSliderImageUrl(e.target.value)} placeholder="URL gambar atau upload file" className="flex-1" />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="gap-1 shrink-0"
+                  disabled={uploading}
+                  onClick={() => document.getElementById('slider-upload')?.click()}
+                >
+                  {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                  {uploading ? "..." : "Upload"}
+                </Button>
+                <input
+                  id="slider-upload"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    setUploading(true);
+                    try {
+                      const formData = new FormData();
+                      formData.append('image', file);
+                      const token = localStorage.getItem('auth_token');
+                      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001/api'}/admin/upload`, {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${token}` },
+                        body: formData,
+                      });
+                      const data = await res.json();
+                      if (data.url) setSliderImageUrl(data.url);
+                      else toast({ title: 'Upload gagal', description: data.error, variant: 'destructive' });
+                    } catch (err: any) {
+                      toast({ title: 'Upload error', description: err.message, variant: 'destructive' });
+                    } finally {
+                      setUploading(false);
+                      e.target.value = '';
+                    }
+                  }}
+                />
+              </div>
               {sliderImageUrl && (
-                <img src={sliderImageUrl} alt="Preview" className="w-full h-32 object-cover rounded-lg border" />
+                <img src={sliderImageUrl.startsWith('/') ? `${(import.meta.env.VITE_API_URL || 'http://localhost:3001/api').replace('/api','')}${sliderImageUrl}` : sliderImageUrl} alt="Preview" className="w-full h-32 object-cover rounded-lg border" />
               )}
             </div>
             <div className="space-y-2">
