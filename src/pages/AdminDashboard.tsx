@@ -16,6 +16,19 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+const API_BASE = API_URL.replace('/api', '');
+
+const resolveImageUrl = (url: string) => {
+  if (!url) return '';
+  if (url.startsWith('http')) return url;
+  // Jika URL mulai dengan /uploads, tambahkan base API
+  if (url.startsWith('/uploads')) {
+    return `${API_BASE}${url}`;
+  }
+  return url;
+};
+
 type AppRole = "admin" | "ustad" | "klien";
 
 interface UserWithRole {
@@ -380,7 +393,7 @@ const AdminDashboard = () => {
                       sliders.map(s => (
                         <TableRow key={s.id}>
                           <TableCell>
-                            <img src={s.image_url} alt={s.title} className="w-20 h-12 object-cover rounded-md" />
+                            <img src={resolveImageUrl(s.image_url)} alt={s.title} className="w-20 h-12 object-cover rounded-md" />
                           </TableCell>
                           <TableCell className="font-medium">
                             <div>
@@ -587,7 +600,7 @@ const AdminDashboard = () => {
                       const formData = new FormData();
                       formData.append('image', file);
                       const token = localStorage.getItem('auth_token');
-                      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001/api'}/admin/upload`, {
+                      const res = await fetch(`${API_URL}/admin/upload`, {
                         method: 'POST',
                         headers: { 'Authorization': `Bearer ${token}` },
                         body: formData,
@@ -605,7 +618,7 @@ const AdminDashboard = () => {
                 />
               </div>
               {sliderImageUrl && (
-                <img src={sliderImageUrl.startsWith('/') ? `${(import.meta.env.VITE_API_URL || 'http://localhost:3001/api').replace('/api','')}${sliderImageUrl}` : sliderImageUrl} alt="Preview" className="w-full h-32 object-cover rounded-lg border" />
+                <img src={resolveImageUrl(sliderImageUrl)} alt="Preview" className="w-full h-32 object-cover rounded-lg border" />
               )}
             </div>
             <div className="space-y-2">
