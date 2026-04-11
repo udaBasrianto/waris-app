@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Scale, BookOpen, Calculator, Users, Bell, ShieldCheck, MapPin, Clock } from "lucide-react";
 import MobileLayout from "@/components/MobileLayout";
 import ServiceCard from "@/components/ServiceCard";
@@ -9,11 +9,15 @@ import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
 import logo from "@/assets/logo.png";
 import { useNotifications } from "@/contexts/NotificationContext";
+import { format } from "date-fns";
+import { id } from "date-fns/locale";
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 const services = [
   { icon: Scale, title: "Pembagian Warisan", description: "Konsultasi pembagian harta sesuai ilmu Faraidh", path: "/konsultasi" },
   { icon: Calculator, title: "Kalkulator Faraidh", description: "Hitung bagian warisan ahli waris secara otomatis", path: "/kalkulator" },
-  { icon: BookOpen, title: "Materi Faraidh", description: "Pelajari dasar-dasar ilmu waris dalam Islam", path: "/konsultasi" },
+  { icon: BookOpen, title: "Materi & Berita", description: "Pelajari dasar-dasar ilmu waris dalam Islam", path: "/blog" },
   { icon: Users, title: "Mediasi Keluarga", description: "Pendampingan pembagian warisan bersama keluarga", path: "/konsultasi" },
 ];
 
@@ -26,6 +30,14 @@ interface UstadData {
   available: boolean;
 }
 
+interface PostPreview {
+  id: string;
+  title: string;
+  slug: string;
+  featured_image: string;
+  published_at: string;
+}
+
 const Index = () => {
   const navigate = useNavigate();
   const { user, role } = useAuth();
@@ -33,6 +45,15 @@ const Index = () => {
   const [ustads, setUstads] = useState<UstadData[]>([]);
   const [location, setLocation] = useState<string>("Mendeteksi lokasi...");
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
+  const [recentPosts, setRecentPosts] = useState<PostPreview[]>([]);
+
+  const resolveImageUrl = (url: string) => {
+    if (!url) return '';
+    if (url.startsWith('http')) return url;
+    const API_BASE = API_URL.replace('/api', '');
+    if (url.startsWith('/uploads')) return `${API_BASE}${url}`;
+    return url;
+  };
 
   // Fetch ustads
   useEffect(() => {
@@ -45,6 +66,16 @@ const Index = () => {
       }
     };
     fetchUstads();
+
+    const fetchPosts = async () => {
+      try {
+        const data = await api.get<PostPreview[]>("/blog");
+        setRecentPosts(data.slice(0, 5)); // Get top 5 recent posts
+      } catch {
+        // silently fail
+      }
+    };
+    fetchPosts();
   }, []);
 
   // Real-time clock
@@ -215,6 +246,44 @@ const Index = () => {
             ))
           )}
         </div>
+      </div>
+
+      {/* Recent Blog Posts */}
+      <div className="px-5 mt-6 mb-10">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="font-heading font-semibold text-base text-foreground">Artikel Terbaru</h2>
+          <button onClick={() => navigate("/blog")} className="text-xs text-primary font-medium">Lihat Semua</button>
+        </div>
+        
+        {recentPosts.length === 0 ? (
+          <p className="text-sm text-muted-foreground text-center py-4">Belum ada artikel</p>
+        ) : (
+          <div className="flex overflow-x-auto pb-4 gap-3 scrollbar-none -mx-5 px-5">
+            {recentPosts.map((post) => (
+              <Link 
+                key={post.id} 
+                to={`/blog/${post.slug}`} 
+                className="flex-shrink-0 w-64 bg-card rounded-xl overflow-hidden shadow-sm border block"
+              >
+                <div className="h-32 bg-muted w-full overflow-hidden">
+                  {post.featured_image && (
+                    <img 
+                      src={resolveImageUrl(post.featured_image)} 
+                      alt={post.title} 
+                      className="w-full h-full object-cover"
+                    />
+                  )}
+                </div>
+                <div className="p-3">
+                  <h3 className="font-heading font-semibold text-sm line-clamp-2 mb-1">{post.title}</h3>
+                  <p className="text-xs text-muted-foreground">
+                    {post.published_at ? format(new Date(post.published_at), 'd MMM yyyy', { locale: id }) : ''}
+                  </p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
     </MobileLayout>
   );

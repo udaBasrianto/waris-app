@@ -4,6 +4,7 @@ import { api } from "@/lib/api";
 import { Navigate, useNavigate } from "react-router-dom";
 import { Users, UserCheck, MessageSquare, TrendingUp, Shield, ArrowLeft, Plus, Pencil, Trash2, CalendarDays, Image, Upload, Loader2 } from "lucide-react";
 import UstadScheduleManager from "@/components/UstadScheduleManager";
+import { AdminBlogManager } from "@/components/AdminBlogManager";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -355,10 +356,11 @@ const AdminDashboard = () => {
         </div>
 
         <Tabs defaultValue="ustad-profiles" className="mb-8">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-7 h-auto">
             <TabsTrigger value="sliders" className="gap-1"><Image className="w-3.5 h-3.5" /> Slider</TabsTrigger>
             <TabsTrigger value="ustad-profiles">Profil Ustad</TabsTrigger>
             <TabsTrigger value="jadwal" className="gap-1"><CalendarDays className="w-3.5 h-3.5" /> Jadwal</TabsTrigger>
+            <TabsTrigger value="blog">📝 Blog</TabsTrigger>
             <TabsTrigger value="ustads">Ustad ({ustads.length})</TabsTrigger>
             <TabsTrigger value="kliens">Klien ({kliens.length})</TabsTrigger>
             <TabsTrigger value="semua">Semua ({totalUsers})</TabsTrigger>
@@ -487,6 +489,10 @@ const AdminDashboard = () => {
                 <UstadScheduleManager isAdmin />
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="blog">
+             <AdminBlogManager />
           </TabsContent>
 
           <TabsContent value="ustads">

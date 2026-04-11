@@ -20,6 +20,8 @@ import UstadProfil from "./pages/UstadProfil";
 import UstadDashboard from "./pages/UstadDashboard";
 import NotFound from "./pages/NotFound";
 import Kalkulator from "./pages/Kalkulator";
+import Blog from "./pages/Blog";
+import BlogPost from "./pages/BlogPost";
 const queryClient = new QueryClient();
 
 import { NotificationProvider } from "@/contexts/NotificationContext";
@@ -47,6 +49,8 @@ const App = () => (
               <Route path="/ustad-dashboard" element={<ProtectedRoute><UstadDashboard /></ProtectedRoute>} />
               <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
               <Route path="/kalkulator" element={<Kalkulator />} />
+              <Route path="/blog" element={<Blog />} />
+              <Route path="/blog/:slug" element={<BlogPost />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </NotificationProvider>

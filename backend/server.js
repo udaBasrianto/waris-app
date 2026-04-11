@@ -6,6 +6,7 @@ import profileRoutes from './routes/profile.js';
 import consultationRoutes from './routes/consultation.js';
 import ustadRoutes from './routes/ustad.js';
 import adminRoutes from './routes/admin.js';
+import blogRoutes from './routes/blog.js';
 import db from './db.js';
 
 const app = express();
@@ -23,6 +24,7 @@ app.use('/api/profiles', profileRoutes);
 app.use('/api/consultations', consultationRoutes);
 app.use('/api/ustads', ustadRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/blog', blogRoutes);
 
 // Public: Get active sliders
 app.get('/api/sliders', async (_, res) => {
