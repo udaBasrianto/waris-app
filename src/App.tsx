@@ -20,14 +20,9 @@ import UstadProfil from "./pages/UstadProfil";
 import UstadDashboard from "./pages/UstadDashboard";
 import NotFound from "./pages/NotFound";
 import Kalkulator from "./pages/Kalkulator";
-import { useConsultationNotifications } from "@/hooks/useConsultationNotifications";
-
 const queryClient = new QueryClient();
 
-const NotificationListener = () => {
-  useConsultationNotifications();
-  return null;
-};
+import { NotificationProvider } from "@/contexts/NotificationContext";
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -36,24 +31,25 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <NotificationListener />
-          <Routes>
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/" element={<Index />} />
-            <Route path="/konsultasi" element={<ProtectedRoute><Konsultasi /></ProtectedRoute>} />
-            <Route path="/konsultasi/:id" element={<ProtectedRoute><ChatRoom /></ProtectedRoute>} />
-            <Route path="/riwayat" element={<ProtectedRoute><Riwayat /></ProtectedRoute>} />
-            <Route path="/profil" element={<ProtectedRoute><Profil /></ProtectedRoute>} />
-            <Route path="/pengaturan-akun" element={<ProtectedRoute><PengaturanAkun /></ProtectedRoute>} />
-            <Route path="/keamanan-privasi" element={<ProtectedRoute><KeamananPrivasi /></ProtectedRoute>} />
-            <Route path="/syarat-ketentuan" element={<SyaratKetentuan />} />
-            <Route path="/pusat-bantuan" element={<PusatBantuan />} />
-            <Route path="/ustad/:id" element={<UstadProfil />} />
-            <Route path="/ustad-dashboard" element={<ProtectedRoute><UstadDashboard /></ProtectedRoute>} />
-            <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
-            <Route path="/kalkulator" element={<Kalkulator />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <NotificationProvider>
+            <Routes>
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/" element={<Index />} />
+              <Route path="/konsultasi" element={<ProtectedRoute><Konsultasi /></ProtectedRoute>} />
+              <Route path="/konsultasi/:id" element={<ProtectedRoute><ChatRoom /></ProtectedRoute>} />
+              <Route path="/riwayat" element={<ProtectedRoute><Riwayat /></ProtectedRoute>} />
+              <Route path="/profil" element={<ProtectedRoute><Profil /></ProtectedRoute>} />
+              <Route path="/pengaturan-akun" element={<ProtectedRoute><PengaturanAkun /></ProtectedRoute>} />
+              <Route path="/keamanan-privasi" element={<ProtectedRoute><KeamananPrivasi /></ProtectedRoute>} />
+              <Route path="/syarat-ketentuan" element={<SyaratKetentuan />} />
+              <Route path="/pusat-bantuan" element={<PusatBantuan />} />
+              <Route path="/ustad/:id" element={<UstadProfil />} />
+              <Route path="/ustad-dashboard" element={<ProtectedRoute><UstadDashboard /></ProtectedRoute>} />
+              <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+              <Route path="/kalkulator" element={<Kalkulator />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </NotificationProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

@@ -8,6 +8,7 @@ import HeroSlider from "@/components/HeroSlider";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
 import logo from "@/assets/logo.png";
+import { useNotifications } from "@/contexts/NotificationContext";
 
 const services = [
   { icon: Scale, title: "Pembagian Warisan", description: "Konsultasi pembagian harta sesuai ilmu Faraidh", path: "/konsultasi" },
@@ -28,6 +29,7 @@ interface UstadData {
 const Index = () => {
   const navigate = useNavigate();
   const { user, role } = useAuth();
+  const { unreadCount, markAsRead } = useNotifications();
   const [ustads, setUstads] = useState<UstadData[]>([]);
   const [location, setLocation] = useState<string>("Mendeteksi lokasi...");
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
@@ -92,14 +94,14 @@ const Index = () => {
     <MobileLayout>
       {/* Header */}
       <div className="gradient-primary px-5 pt-12 pb-8 rounded-b-3xl relative overflow-hidden shadow-lg border-b border-primary/20">
-        
+
         {/* Subtle Interlocking Islamic Lattice Pattern */}
-        <div 
+        <div
           className="absolute inset-0 opacity-[0.04]"
-          style={{ 
+          style={{
             backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Cg fill='none' stroke='%23ffffff' stroke-width='1.5'%3E%3Cpath d='M0 40 l40 -40 l40 40 l-40 40 z' /%3E%3Cpath d='M20 20 h40 v40 h-40 z' /%3E%3C/g%3E%3C/svg%3E")`,
             backgroundSize: '80px 80px'
-          }} 
+          }}
         />
 
         {/* Ambient Glowing Orbs (Modern Glassmorphism vibe) */}
@@ -134,15 +136,21 @@ const Index = () => {
         </svg>
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <img src={logo} alt="KonsultasiFaraidh.id" width={40} height={40} className="rounded-lg bg-primary-foreground/10 p-1" />
+            <img src={logo} alt="KonsultasiFaraidh.com" width={40} height={40} className="rounded-lg bg-primary-foreground/10 p-1" />
             <div>
               <h1 className="font-heading text-primary-foreground text-lg font-bold leading-tight">KonsultasiFaraidh</h1>
-              <p className="text-primary-foreground/70 text-xs">.id</p>
+              <p className="text-primary-foreground/70 text-xs">.com</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <button className="w-9 h-9 rounded-full bg-primary-foreground/10 flex items-center justify-center">
+            <button onClick={markAsRead} className="relative w-9 h-9 rounded-full bg-primary-foreground/10 flex items-center justify-center">
               <Bell className="w-4 h-4 text-primary-foreground" />
+              {unreadCount > 0 && (
+                <span className="absolute top-1 right-1 flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500 border-2 border-primary"></span>
+                </span>
+              )}
             </button>
             {role === "admin" && (
               <button onClick={() => navigate("/admin")} className="w-9 h-9 rounded-full bg-primary-foreground/10 flex items-center justify-center">
